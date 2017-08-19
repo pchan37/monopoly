@@ -1,0 +1,86 @@
+__includes [
+  "file_utils.nls"
+]
+
+globals [
+  property_list
+  property_stats
+  bought_stats
+  
+  player_order
+  current_turn
+]
+
+;; Reads the configuration file to initialize player_order and current_turn
+;;
+to read-config
+  carefully
+  [
+    file-open "Monopoly.ini"
+    let total_users (read-from-string (get-config-value file-read-line))
+    let total_turns (read-from-string (get-config-value file-read-line))
+    
+    set player_order []
+    repeat 4
+    [
+      let garbage file-read-line
+      let player_name (get-config-value file-read-line)
+      let player_color (read-from-string (get-config-value file-read-line))
+      set player_order (lput (list player_name player_color) player_order)
+    ]
+    file-close
+  ]
+  [
+    ; Close "Monopoly.ini" since it was open before
+    file-close
+    if file-exists? "Monopoly.ini"
+    [file-delete "Monopoly.ini"]
+    write-config
+    read-config
+    debug-print "Wrote and read config file"
+  ]
+  set current_turn 0
+end
+
+;; Writes the configuration file (assumes it does not previously exists)
+;;
+to write-config
+  file-open "Monopoly.ini"
+  file-print "Total-Users=1"
+  file-print "Turns=30"
+  let player_one_stats (list "Player 1" "Name=Comnputer_1" "Color=green")
+  file-print-lines player_one_stats
+  let player_two_stats (list "Player 2" "Name=Comnputer_2" "Color=red")
+  file-print-lines player_two_stats
+  let player_three_stats (list "Player 3" "Name=Comnputer_3" "Color=orange")
+  file-print-lines player_three_stats
+  let player_four_stats (list "Player 4" "Name=User" "Color=blue")
+  file-print-lines player_four_stats
+  file-close
+end
+
+;; Reads the file, Data.dat, and populate property_list, property_stats, and bought_stats.
+;; This should be ran once at the start of the program to load data for each property.
+;;
+to read-data
+  set property_list []
+  set property_stats []
+  set bought_stats []
+  file-open "data/Data.dat"
+  
+  let garbage file-read-line
+  repeat 40
+  [
+    set property_list (lput file-read property_list)
+    let property_stats_entry []
+    repeat 8
+    [set property_stats_entry (lput file-read property_stats_entry)]
+    set property_stats (lput property_stats_entry property_stats)
+  ]
+  repeat 28
+  [
+    let bought_stats_entry (list file-read file-read)
+    set bought_stats (lput bought_stats_entry bought_stats)
+  ]
+  file-close
+end

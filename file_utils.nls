@@ -1,0 +1,26 @@
+;; Get the value of a configuration key-value pair (key=value)
+;;
+;; Args:
+;;     config_line (string): a line from the configuration file, in the format: key=value
+;;
+;; Reports:
+;;     (string): the value portion of a string in the format: key=value
+;;
+to-report get-config-value [config_line]
+  let start_index (position "=" config_line) + 1
+  let end_index (length config_line)
+  report (substring config_line start_index end_index)
+end
+
+;; Writes each element of the given list to an already open file
+;;
+;; Args:
+;;     list_of_lines (list): a list of strings to be written
+;;
+to file-print-lines [list_of_lines]
+  foreach list_of_lines
+  [
+    line ->
+    file-print line
+  ]
+end

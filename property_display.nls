@@ -1,0 +1,162 @@
+;; Get the property spacing as calculated from the center of the property
+;;
+;; Args:
+;;     property_name (string): the name of the property to calculate the value for
+;;
+;; Reports:
+;;     (float): the property spacing calculated as the center of the property to the shortest edge
+;;
+to-report get-property-spacing-from-center [property_name]
+  let CORNER_PROPERTY_NAMES (list "Go" "Jail" "Free Parking" "Go To Jail")
+  ifelse (member? property_name CORNER_PROPERTY_NAMES)
+  [report (EXTENDED_PROPERTY_SPACING / 2)]
+  [report (STANDARD_PROPERTY_SPACING / 2)]
+end
+
+;; Get the property closest to the given coordinates
+;;
+;; Args:
+;;     x_cor (float): the x-cor to search from
+;;     y_cor (float): the y-cor to search from
+;;
+;; Reports:
+;;     (property/turtle): the property closest to the given coordinates
+;;
+to-report get-closest-property [x_cor y_cor]
+  let closest_property nobody
+  crt 1 [
+    setxy x_cor y_cor
+    set closest_property (min-one-of properties [distance myself])
+    die
+  ]
+  report closest_property
+end
+
+;; Get the current property under the mouse
+;;
+;; Reports:
+;;     (property/turtle): the property under the mouse
+;;
+to-report get-property-under-mouse
+  let closest_property (get-closest-property mouse-xcor mouse-ycor)
+  if closest_property = nobody
+  [report nobody]
+  ask closest_property
+  [
+    if ((distancexy mouse-xcor mouse-ycor) > (get-property-spacing-from-center name))
+    [set closest_property nobody]
+  ]
+  report closest_property
+end
+
+;; Get the property clicked by the user
+;;
+;; Reports:
+;;     (property/turtle): the property clicked by the user or nobody
+;;
+to-report get-user-clicked-property
+  let property_under_mouse (get-property-under-mouse)
+  let mouse_on_property? (property_under_mouse != nobody)
+  ifelse mouse_on_property? and mouse-down?
+  [
+    let selected_property get-property-under-mouse
+    crt 1 [
+      display-property-details selected_property "Select"
+      die
+    ]
+    while [mouse-down?]
+    []
+    report get-property-under-mouse
+  ]
+  [report nobody]
+end
+
+;; Get the adjusted property attributes as used for displaying properties (insert mortgage value in the second
+;; position)
+;;
+;; Args:
+;;     property_attributes (list): the original value of property attributes as found in property_stats
+;;
+;; Reports:
+;;     (list): the adjusted value of property_attributes with the mortgage value inserted in the second position
+;;
+to-report get-adjusted-property-attributes-for-property-display [property_attributes]
+  let price (item 0 property_attributes)
+  set property_attributes (but-first property_attributes)
+  set property_attributes (fput (price / 2) property_attributes)
+  set property_attributes (fput price property_attributes)
+  set property_attributes (but-last property_attributes)
+  report property_attributes
+end
+
+;; Reports the string form of the specified currency padded with zeros if necessary
+;;
+;; Args:
+;;     amount (float): the currency amount to convert into a string form
+;;
+;; Reports:
+;;     (string): the string form of the given currency padded with zeros so that there are two digits after the
+;;               decimal point
+;;
+to-report get-currency-string-padded [amount]
+  ; test if integral
+  ifelse amount - (int amount) = 0
+  [report (word amount ".00")]
+  [
+    ; test if only one digit after decimal
+    ifelse (amount * 10) - (int (amount * 10)) = 0
+    [report (word amount "0")]
+    [report (word amount)]
+  ]
+end
+
+;; Display the details for the specified property in the middle of the current board and a message to be used as a
+;; button near the bottom (only renders the string)
+;;
+;; Args:
+;;     selected_property (property): the property/turtle to display the details of
+;;     button_message (string): the string to be used as a button (animating the button is not supported)
+;;
+to display-property-details [selected_property button_message]
+  let top_left_property (one-of current_board with [name = "Free Parking"])
+  let top_left_property_xcor [xcor] of top_left_property
+  let top_left_property_ycor [ycor] of top_left_property
+  
+  let property_display_top_left_xcor (top_left_property_xcor + EXTENDED_PROPERTY_SPACING)
+  let property_display_top_left_ycor (top_left_property_ycor - EXTENDED_PROPERTY_SPACING)
+  let property_display_total_width (property_display_top_left_xcor + (8 * STANDARD_PROPERTY_SPACING))
+  
+  let property_name [name] of selected_property
+  let property_index (position property_name property_list)
+  let property_attributes (item property_index property_stats)
+  set property_attributes (get-adjusted-property-attributes-for-property-display property_attributes)
+  
+  let message_xcor property_display_top_left_xcor
+  let message_ycor property_display_top_left_ycor
+  
+  let MESSAGE_HEADER_SIZE (1.3 * PROPERTY_SIZE)
+  let MESSAGE_SPACING (MESSAGE_HEADER_SIZE / 3)
+  let MESSAGE_BODY_SIZE (2 * MESSAGE_SPACING)
+  
+  tsimple-render-string property_name message_xcor message_ycor MESSAGE_HEADER_SIZE white
+  set message_ycor (message_ycor - MESSAGE_BODY_SIZE)
+  
+  let attributes_type (list "Price" "Mortgage" "Rent" "First House" "Two Houses" "Three Houses" "Four Houses" "Hotel")
+  let attribute_min_length (max (map length attributes_type)) + 3
+  (foreach property_attributes attributes_type
+    [
+      [attribute attr_type] ->
+      let message_padding (reduce word (n-values (attribute_min_length - (length attr_type)) [i -> " "]))
+      let message (word attr_type ":" message_padding "$" (get-currency-string-padded attribute))
+      tsimple-render-string message message_xcor message_ycor MESSAGE_BODY_SIZE white
+      set message_ycor (message_ycor - MESSAGE_SPACING)
+    ])
+  
+  set message_ycor (message_ycor - MESSAGE_SPACING)
+  set message_ycor (message_ycor - MESSAGE_SPACING)
+  set message_xcor (get-xcor-for-centered-string property_display_top_left_xcor
+                                                 property_display_total_width
+                                                 button_message
+                                                 MESSAGE_BODY_SIZE)
+  tsimple-render-string button_message message_xcor message_ycor MESSAGE_BODY_SIZE white
+end

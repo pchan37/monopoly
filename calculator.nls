@@ -1,0 +1,229 @@
+patches-own [orig_color]
+
+globals [
+  CALC_DEFINING_COORDINATES
+  CALC_SCREEN_DEFINING_COORDINATES
+  CALC_KEYS_DEFINING_COORDINATES_LIST
+]
+
+;; Draws the submit button at the specified coordinates
+;;
+;; Args:
+;;     BUTTON_MIN_PXCOR (float): the min-pxcor for the submit button
+;;     BUTTON_MAX_PXCOR (float): the max-pxcor for the submit button
+;;     BUTTON_MIN_PYCOR (float): the min-pycor for the submit button
+;;     BUTTON_MAX_PYCOR (float): the max-pycor for the submit button
+;;
+to draw-submit-button [BUTTON_MIN_PXCOR BUTTON_MAX_PXCOR BUTTON_MIN_PYCOR BUTTON_MAX_PYCOR]
+  ask patches with [pxcor > BUTTON_MIN_PXCOR and pxcor < BUTTON_MAX_PXCOR and
+                    pycor > BUTTON_MIN_PYCOR and pycor < BUTTON_MAX_PYCOR]
+  [set pcolor sky] ; Use violet for highlight
+
+  let MESSAGE "Submit"
+  let MESSAGE_XCOR BUTTON_MIN_PXCOR + 2
+  let MESSAGE_YCOR (mean (list BUTTON_MIN_PYCOR BUTTON_MAX_PYCOR))
+  let MESSAGE_SIZE 2
+  let MESSAGE_COLOR black
+  tsimple-render-string MESSAGE MESSAGE_XCOR MESSAGE_YCOR MESSAGE_SIZE MESSAGE_COLOR
+end
+
+;; Draws the calculator using predetermined coordinates
+;;
+to draw-calculator
+  ; Elements of array detail the max-pycor, max-pxcor, min-pycor, and min-pxcor for a drawing component
+  set CALC_DEFINING_COORDINATES [31 51 9 35]
+  set CALC_SCREEN_DEFINING_COORDINATES [30 50 27 36]
+  set CALC_KEYS_DEFINING_COORDINATES_LIST (list [26 40 23 36] [26 45 23 41] [26 50 23 46]
+                                                [22 40 19 36] [22 45 19 41] [22 50 19 46]
+                                                [18 40 15 36] [18 45 15 41] [18 50 15 46]
+                                                [14 40 11 36] [14 45 11 41] [14 50 11 46])
+
+  ask patches with [true] [
+    set orig_color pcolor
+    set pcolor 69
+  ]
+  ask patches with [patch-coordinates-inside? CALC_DEFINING_COORDINATES]
+  [set pcolor gray]
+  ask patches with [patch-coordinates-inside? CALC_SCREEN_DEFINING_COORDINATES]
+  [set pcolor black]
+
+  let MESSAGE "Enter how much you are willing to use..."
+  let MESSAGE_XCOR 2
+  let MESSAGE_YCOR 35
+  let MESSAGE_SIZE 4
+  let MESSAGE_COLOR black
+  tsimple-render-string MESSAGE MESSAGE_XCOR MESSAGE_YCOR MESSAGE_SIZE MESSAGE_COLOR
+
+  let CALC_KEYS_STRING "7894561230.c"
+  foreach CALC_KEYS_DEFINING_COORDINATES_LIST
+  [
+    CALC_KEY_DEFINING_COORDINATE ->
+
+    ask patches with [patch-coordinates-inside? CALC_KEY_DEFINING_COORDINATE]
+    [set pcolor orange]
+
+    set MESSAGE (first CALC_KEYS_STRING)
+    set MESSAGE_XCOR (item 3 CALC_KEY_DEFINING_COORDINATE) + 2.0
+    set MESSAGE_YCOR (item 2 CALC_KEY_DEFINING_COORDINATE) + 1.5
+    set MESSAGE_SIZE 2
+    set MESSAGE_COLOR black
+    tsimple-render-string MESSAGE MESSAGE_XCOR MESSAGE_YCOR MESSAGE_SIZE MESSAGE_COLOR
+
+    set CALC_KEYS_STRING (but-first CALC_KEYS_STRING)
+  ]
+
+  let BUTTON_TOP_DEFINING_COORDINATE 27
+  let BUTTON_BOT_DEFINING_COORDINATE 23
+  let BUTTON_LEFT_DEFINING_COORDINATE 51
+  let BUTTON_RIGHT_DEFINING_COORDINATE 58
+  (draw-submit-button BUTTON_LEFT_DEFINING_COORDINATE BUTTON_RIGHT_DEFINING_COORDINATE
+                      BUTTON_BOT_DEFINING_COORDINATE BUTTON_TOP_DEFINING_COORDINATE)
+  display
+end
+
+;; Observer version of the turtle-context, draw-calculator method
+;;
+to draw-calculator-observer
+  crt 1 [draw-calculator die]
+end
+
+;; Get the key that is currently under the mouse
+;;
+;; Reports:
+;;     (string): the value of the key that the mouse is currently hovering over
+;;
+to-report get-key-under-mouse
+  let CALC_KEYS_STRING "7894561230.c"
+
+  ifelse mouse-coordinates-inside? CALC_DEFINING_COORDINATES
+  [
+    let index 0
+    foreach CALC_KEYS_DEFINING_COORDINATES_LIST
+    [
+      CALC_KEY_DEFINING_COORDINATES ->
+
+      ifelse mouse-coordinates-inside? CALC_KEY_DEFINING_COORDINATES
+      [
+        ask patches with [patch-coordinates-inside? CALC_KEY_DEFINING_COORDINATES]
+        [set pcolor green]
+        report (substring CALC_KEYS_STRING index (index + 1))
+      ]
+      [
+        ask patches with [patch-coordinates-inside? CALC_KEY_DEFINING_COORDINATES]
+        [set pcolor orange]
+      ]
+      set index index + 1
+    ]
+    report ""
+  ]
+  [report ""]
+end
+
+;; Get the value of the latest key that the user clicked on, non-blocking
+;;
+;; Reports:
+;;     (string): value of the key the user last clicked on
+;;
+to-report get-key-press
+  let key_under_mouse (get-key-under-mouse)
+  let mouse_on_key? (not empty? key_under_mouse)
+  ifelse mouse_on_key? and mouse-down?
+  [
+    while [mouse-down?]
+    []
+    report get-key-under-mouse
+  ]
+  [report ""]
+end
+
+;; Parses the key press and reports the updated value entered by the user so
+;; far.
+;;
+;; Args:
+;;     user_selected_value (string): the value entered by the user so far
+;;     key_press (string): the last key the user clicked on
+;;
+;; Reports:
+;;     (string): the updated value entered by the user so far
+;;
+to-report process-key-press [user_selected_value key_press]
+  ifelse key_press = "c"
+  [
+    if (length user_selected_value) > 0
+    [set user_selected_value (but-last user_selected_value)]
+  ]
+  [
+    if (not ((member? "." user_selected_value) and key_press = ".")) and (length user_selected_value < 9)
+    [set user_selected_value (word user_selected_value key_press)]
+  ]
+  if member? "." user_selected_value
+  [
+    let num_digits_after_decimal ((length user_selected_value) - (position "." user_selected_value) - 1)
+    if num_digits_after_decimal > 2
+    [set user_selected_value (but-last user_selected_value)]
+  ]
+  report user_selected_value
+end
+
+;; Updates the calculator screen with the latest value entered by the user
+;;
+;; Args:
+;;     user_selected_value (string): the value entered by the user
+;;
+to display-user-selected-value [user_selected_value]
+  no-display
+  ask displayturtles with [not hidden? and turtle-coordinates-inside? CALC_SCREEN_DEFINING_COORDINATES]
+  [die]
+
+  let MESSAGE user_selected_value
+  let MESSAGE_XCOR (49 - (4 * (length user_selected_value) / 3))
+  let MESSAGE_YCOR 28.5
+  let MESSAGE_SIZE 4
+  let MESSAGE_COLOR orange
+  tsimple-render-string MESSAGE MESSAGE_XCOR MESSAGE_YCOR MESSAGE_SIZE MESSAGE_COLOR
+  display
+end
+
+;; Reports if the user clicked on the submit button, non-blocking.  Also, change the color
+;; of the submit button from sky to violet if the mouse is over the button.
+;;
+;; Reports:
+;;     (boolean): whether the user has clicked on the submit button
+;;
+to-report user-has-not-submitted?
+  let BUTTON_DEFINING_COORDINATES [27 58 23 51]
+  ifelse mouse-coordinates-inside? BUTTON_DEFINING_COORDINATES
+  [
+    ask patches with [patch-coordinates-inside? BUTTON_DEFINING_COORDINATES]
+    [set pcolor violet]
+    ifelse mouse-down?
+    [report false]
+    [report true]
+  ]
+  [
+    ask patches with [patch-coordinates-inside? BUTTON_DEFINING_COORDINATES]
+    [set pcolor sky]
+    report true
+  ]
+end
+
+;; Get input from the user using the drawn calculator, collecting all the key presses.
+;;
+;; Reports:
+;;     (string): the final value that the user entered
+;;
+to-report animate-calculator
+  let user_selected_value ""
+
+  while [user-has-not-submitted?]
+  [
+    let key_press get-key-press
+    if (not empty? key_press)
+    [
+      set user_selected_value (process-key-press user_selected_value key_press)
+      (display-user-selected-value user_selected_value)
+      print user_selected_value
+    ]
+  ]
+  report user_selected_value
+end

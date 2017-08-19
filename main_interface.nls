@@ -1,0 +1,50 @@
+to display-name-plates
+  let name_color black
+  let name_plate_coordinates_list [[9  3]
+                                   [10.5 38]
+                                   [40.5 38]
+                                   [40.5  1]]
+  let players_list (sort players)
+  (foreach players_list name_plate_coordinates_list
+  [
+    [player_turtle name_plate_coordinate] ->
+
+    let name_plate_xcor (item 0 name_plate_coordinate)
+    let name_plate_ycor (item 1 name_plate_coordinate)
+    let name_plate_bounding_coordinates (list name_plate_ycor       (name_plate_xcor + 12)
+                                              (name_plate_ycor - 4) name_plate_xcor)
+
+    simple-render-string ([name] of player_turtle) (name_plate_xcor + 1.5) (name_plate_ycor - 2) name_color
+    ask patches with [patch-coordinates-inside? name_plate_bounding_coordinates]
+    [set pcolor (but-last [token_hue] of player_turtle)]
+  ])
+end
+
+to
+
+to display-standard-interface
+end
+
+to drawPlayersIcon
+  let _TOP    32
+  let _BOTTOM 6
+  let _LEFT   12
+  let _RIGHT  46
+  let posList (list (list _BOTTOM _LEFT) (list _TOP _LEFT) (list _TOP _RIGHT) (list _BOTTOM _RIGHT))
+  foreach (sort players)
+  [
+    ask ?
+    [
+      let myPosition (item who posList)
+      hatch-displayturtles 1
+      [
+        setxy (item 1 myPosition) (item 0 myPosition)
+        set size 4
+        set color gray
+        set hidden? false
+        set shape [shape] of myself
+        set heading 90 * [who] of myself + 45
+      ]
+    ]
+  ]
+end

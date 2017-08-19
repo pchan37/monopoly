@@ -1,0 +1,70 @@
+# Buy Price, Rent, House 1, House 2, House 3, House 4, Hotel, Color
+"Jail"              0     0     0     0     0     0     0      0
+"Gdynia"           .6   .02    .1    .3    .9   1.6   2.5  brown
+"CC"                0     0     0     0     0     0     0      0
+"Taipei"           .6   .04    .2    .6   1.8   3.2   4.5  brown
+"Income Tax"        0     2     2     2     2     2     2      0
+"Monopoly Rail"     2   .25    .5     1     2     2     2      1
+"Tokyo"             1   .06    .3    .9   2.7     4   5.5     86
+"Chance"            0     0     0     0     0     0     0      0
+"Barcelona"         1   .06    .3    .9   2.7     4   5.5     86
+"Athens"          1.2   .08    .4     1     3   4.5     6     86
+"GO"                0     0     0     0     0     0     0      0
+"Istanbul"        1.4    .1    .5   1.5   4.5  6.25   7.5    126
+"Solar Power"     1.5    .4     1     1     1     1     1      1
+"Kyiv"            1.4    .1    .5   1.5   4.5  6.25   7.5    126
+"Toronto"         1.6   .12    .6   1.8     5     7     9    126
+"Monopoly Air"      2   .25    .5     1     2     2     2      1
+"Rome"            1.8   .14    .7     2   5.5   7.5   9.5 orange
+"CC"                0     0     0     0     0     0     0      0
+"Shanghai"        1.8   .14    .7     2   5.5   7.5   9.5 orange
+"Vancouver"         2   .16    .8   2.2     6     8    10 orange
+"Free Parking"      0     0     0     0     0     0     0      0
+"Sydney"          2.2   .18    .9   2.5     7  8.75  10.5    red
+"Chance"            0     0     0     0     0     0     0      0
+"New York"        2.2   .18    .9   2.5     7  8.75  10.5    red
+"London"          2.4    .2     1     3   7.5  9.25    11    red
+"Monopoly Cruise"   2   .25    .5     1     2     2     2      1
+"Beijing"         2.6   .22   1.1   3.3     8  9.75  11.5 yellow
+"Hong Kong"       2.6   .22   1.1   3.3     8  9.75  11.5 yellow
+"Wind Power"      1.5    .4     1     1     1     1     1      1
+"Jerusalem"       2.8   .24   1.2   3.6   8.5 10.25    12 yellow
+"Go To Jail"        0     0     0     0     0     0     0      0
+"Paris"             3   .26   1.3   3.9     9    11 12.75  green
+"Belgrade"          3   .26   1.3   3.9     9    11 12.75  green
+"CC"                0     0     0     0     0     0     0      0
+"Cape Town"       3.2   .28   1.5   4.5    10    12    14  green
+"Monopoly Space"    2   .25    .5     1     2     2     2      1
+"Chance"            0     0     0     0     0     0     0      0
+"Riga"            3.5   .35  1.75     5    11    13    15    105
+"Luxury Tax"        0     0     0     0     0     0     0      0
+"Montreal"          4    .5     2     6    14    17    20    105
+
+"Monopoly Rail"   "Monopoly Rail"
+"Monopoly Air"    "Monopoly Air"
+"Monopoly Cruise" "Monopoly Cruise"
+"Monopoly Space"  "Monopoly Space"
+green             "Paris"
+green             "Belgrade"
+green             "Cape Town"
+105               "Riga"
+105               "Montreal"
+brown             "Gdynia"
+brown             "Taipei"
+86                "Tokyo"
+86                "Barcelona"
+86                "Athens"
+"Wind Power"      "Wind Power"
+orange            "Rome"
+orange            "Shanghai"
+orange            "Vancouver"
+126               "Istanbul"
+126               "Kyiv"
+126               "Toronto"
+"Solar Power"     "Solar Power"
+yellow            "Beijing"
+yellow            "Hong Kong"
+yellow            "Jerusalem"
+red               "Sydney"
+red               "New York"
+red               "London"

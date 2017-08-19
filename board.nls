@@ -1,0 +1,166 @@
+breed [properties property]
+
+properties-own [name owner value rent original_shape]
+
+globals [
+  UNBUYABLE_PROPERTIES_COLOR
+  UTILITIES_OR_MONOPOLY_COLOR
+  
+  BOARD_TOP
+  BOARD_RIGHT
+  BOARD_LEFT
+  BOARD_BOTTOM
+  PROPERTY_SIZE
+  STANDARD_PROPERTY_SPACING
+  EXTENDED_PROPERTY_SPACING
+  
+  current_board
+  board_stack
+]
+
+;; Draws a property on the screen with the specified attributes
+;;
+;; Args:
+;;     index (int): index of property in the database
+;;     turtle_x (float): x-cor of new property
+;;     turtle_y (float): y-cor of new property
+;;     angle (float): angle of new property
+;;
+to draw-properties [index turtle_x turtle_y angle]
+  create-properties 1
+  [
+    let my_stats (item index property_stats)
+    
+    setxy turtle_x turtle_y
+    set size PROPERTY_SIZE
+    set heading angle
+    set name (item index property_list)
+    set value (item 0 my_stats)
+    set rent  (item 1 my_stats)
+    set color (item 7 my_stats)
+    ifelse color != UNBUYABLE_PROPERTIES_COLOR
+    [set owner "Bank"]
+    [set owner ""]
+    if color = UNBUYABLE_PROPERTIES_COLOR or color = UTILITIES_OR_MONOPOLY_COLOR
+    [set shape name]
+    set original_shape shape
+    
+    set current_board (lput self current_board)
+  ]
+end
+
+;; Initializes board_stack as a list if it is not a list already.  Set current_board to the
+;; value in board_stack and remove it from board_stack.
+;;
+to pop-board
+  if (not (is-list? board_stack))
+  [set board_stack []]
+  
+  if (length board_stack) > 0
+  [
+    set current_board (last board_stack)
+    set board_stack (but-last board_stack)
+  ]
+end
+
+;; Initializes board_stack as a list if it is not a list already.  Add current_board to
+;; board_stack.
+;;
+to push-board
+  if (not (is-list? board_stack))
+  [set board_stack []]
+  
+  set board_stack (lput current_board board_stack)
+end
+
+;; Draws the four sides of the board using values calculated in draw-board.
+;;
+to draw-four-sides
+  let X_COR (BOARD_LEFT + EXTENDED_PROPERTY_SPACING)
+  let Y_COR (BOARD_BOTTOM + EXTENDED_PROPERTY_SPACING)
+  let ANGLES [0 90 180 270]
+  
+  foreach (n-values 9 [i -> i])
+  [
+    STAT_LIST_OFFSET ->
+    
+    let BOTTOM_PROPERTY_INFO (list (9 - STAT_LIST_OFFSET)  X_COR       BOARD_BOTTOM)
+    let LEFT_PROPERTY_INFO   (list (STAT_LIST_OFFSET + 11) BOARD_LEFT  Y_COR)
+    let TOP_PROPERTY_INFO    (list (STAT_LIST_OFFSET + 21) X_COR       BOARD_TOP)
+    let RIGHT_PROPERTY_INFO  (list (39 - STAT_LIST_OFFSET) BOARD_RIGHT Y_COR)
+   
+    let PROPERTY_INFO_LIST (list BOTTOM_PROPERTY_INFO
+                                 LEFT_PROPERTY_INFO
+                                 TOP_PROPERTY_INFO
+                                 RIGHT_PROPERTY_INFO)
+    (foreach PROPERTY_INFO_LIST ANGLES
+    [
+      [PROPERTY_INFO ANGLE] ->
+      draw-properties (item 0 PROPERTY_INFO) (item 1 PROPERTY_INFO) (item 2 PROPERTY_INFO) ANGLE
+    ])
+    set X_COR (X_COR + STANDARD_PROPERTY_SPACING)
+    set Y_COR (Y_COR + STANDARD_PROPERTY_SPACING)
+  ]
+end
+
+;; Draws the four corners of the board using the values calcuated in draw-board.
+;;
+to draw-four-corners
+  let CORNER_COORDINATE_LIST (list (list BOARD_LEFT BOARD_BOTTOM) (list BOARD_RIGHT BOARD_BOTTOM)
+                                   (list BOARD_LEFT BOARD_TOP)    (list BOARD_RIGHT BOARD_TOP))
+  
+  (foreach CORNER_COORDINATE_LIST (n-values 4 [i -> 10 * i])
+  [
+    [CORNER_COORDINATE STAT_LIST_INDEX] ->
+      
+    draw-properties STAT_LIST_INDEX (item 0 CORNER_COORDINATE) (item 1 CORNER_COORDINATE) 0
+  ])
+end
+
+;; Draws the board given the top left corner (as a list: top coordinate, left coordinate) and the
+;; board_size (which is treated as the size of a property).
+;;
+to draw-board [top_left_corner BOARD_SIZE]
+  push-board
+  set current_board []
+  
+  set-default-shape properties "property"
+  set UNBUYABLE_PROPERTIES_COLOR  0
+  set UTILITIES_OR_MONOPOLY_COLOR 1
+  
+  set STANDARD_PROPERTY_SPACING (0.75 * BOARD_SIZE)
+  set EXTENDED_PROPERTY_SPACING (0.87 * BOARD_SIZE)
+  let BOARD_OFFSET (8 * STANDARD_PROPERTY_SPACING) + (2 * EXTENDED_PROPERTY_SPACING)
+  
+  set BOARD_TOP     (item 0 top_left_corner)
+  set BOARD_LEFT    (item 1 top_left_corner)
+  set BOARD_BOTTOM  BOARD_TOP - BOARD_OFFSET
+  set BOARD_RIGHT   BOARD_LEFT + BOARD_OFFSET
+  set PROPERTY_SIZE BOARD_SIZE
+  
+  draw-four-sides
+  draw-four-corners
+  set current_board (turtle-set current_board)
+end
+
+;; Kills all the properties making up the current board
+;;
+to kill-board
+  ask current_board
+  [die]
+  pop-board
+end
+
+;; Hides the current board
+;;
+to hide-board
+  ask current_board
+  [set hidden? true]
+end
+
+;; Unhides the current board
+;;
+to show-board
+  ask current_board
+  [set hidden? false]
+end

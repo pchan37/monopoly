@@ -1,0 +1,193 @@
+breed [displayturtles displayturtle]
+
+;; Get the xcor so that a string rendered at that starting point would be centered
+;;
+;; Args:
+;;     start_xcor (float): the starting xcor of the space for rendering the string
+;;     allowable_space_length (float): the length of the space for rendering the string
+;;     message (string): the message to center
+;;     message_size (float): size of the turtles making up the message
+;;
+;; Reports:
+;;     (float): the xcor to start rendering a string for a centered string
+;;
+to-report get-xcor-for-centered-string [start_xcor allowable_space_length message message_size]
+  let message_length (message_size * (length message) / 3)
+  report (start_xcor + allowable_space_length - message_length) / 2
+end
+
+;; Get a list containing the turtle shape for each character of the string
+;;
+;; Args:
+;;     string (string):
+;;
+;; Reports:
+;;     (list): a list containing the turtle shape for each character of the string
+;;
+to-report get-turtle-shapes [string]
+  let turtle_shape_list []
+  let index 0
+  while [index != (length string)]
+  [
+    let char (substring string index (index + 1))
+    if char = " "
+    [set char ""]
+    ifelse member? char "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    [set turtle_shape_list (lput (word "_" char) turtle_shape_list)]
+    [set turtle_shape_list (lput char turtle_shape_list)]
+    set index (index + 1)
+  ]
+  report turtle_shape_list
+end
+
+;; Displays the string at a given location in a specific color (Observer Context)
+;;
+;; Args:
+;;     string (string): string to display
+;;     turtle_x (float): x-cor to start rendering the string
+;;     turtle_y (float): y-cor to start rendering the string
+;;     turtle_size (float): size of each turtle making up the string
+;;     hue (float): color to display the string in
+;;
+to simple-render-string [string turtle_x turtle_y turtle_size hue]
+  let turtle_shape_list (get-turtle-shapes string)
+  let interval (turtle_size / 3)
+  let index 0
+  foreach turtle_shape_list
+  [
+    turtle_shape ->
+    create-displayturtles 1
+    [
+      set shape turtle_shape
+      setxy (turtle_x + (interval * index)) turtle_y
+      set color hue
+      set size turtle_size
+      set hidden? false
+    ]
+    set index (index + 1)
+  ]
+end
+
+;; Displays the string at a given location in a specific color (Turtle Context)
+;;
+;; Args:
+;;     string (string): string to display
+;;     turtle_x (float): x-cor to start rendering the string
+;;     turtle_y (float): y-cor to start rendering the string
+;;     turtle_size (float): size of each turtle making up the string
+;;     hue (float): color to display the string in
+;;
+to tsimple-render-string [string turtle_x turtle_y turtle_size hue]
+  let turtle_shape_list (get-turtle-shapes string)
+  let interval (turtle_size / 3)
+  let index 0
+  foreach turtle_shape_list
+  [
+    turtle_shape ->
+    hatch-displayturtles 1
+    [
+      set shape turtle_shape
+      setxy (turtle_x + (index * interval)) turtle_y
+      set color hue
+      set size turtle_size
+      set hidden? false
+    ]
+    set index (index + 1)
+  ]
+end
+
+;; Displays the string at a given location in a specific color, erase non-hidden turtles created by this library in a
+;; specific area, and reports a list containing the list of turtle shapes making up the string (Observer Context)
+;;
+;; Args:
+;;     string (string): string to display
+;;     turtle_x (float): x-cor to start rendering the string
+;;     turtle_y (float): y-cor to start rendering the string
+;;     start_x (float): x-cor to start erasing turtles
+;;     end_x (float): x-cor to stop erasing turtles
+;;     start_y (float): y-cor to start erasing turtles
+;;     end_y (float): y-cor to stop erasing turtles
+;;     turtle_size (float): size of each turtle making up the string
+;;     hue (float): color to display the string in
+;;     prev_item (list): list of turtle shapes making up the string, used to track if the area needs to be overwritten;
+;;                       pass [] on first use
+;;
+;; Reports:
+;;     (list): list of turtle shapes making up the string just displayed
+;;
+to-report render-string [string turtle_x turtle_y start_x end_x start_y end_y turtle_size hue prev_item]
+  if (not (is-string? string))
+  [set string (word string)]
+  
+  let turtle_shape_list (get-turtle-shapes string)
+  let interval (turtle_size / 3)
+  let index 0
+  if prev_item != turtle_shape_list
+  [
+    ask displayturtles with [xcor > start_x and xcor < end_x and ycor > start_y and ycor < end_y]
+    [die]
+    
+    foreach turtle_shape_list
+    [
+      turtle_shape ->
+      create-displayturtles 1
+      [
+        set shape turtle_shape
+        setxy (turtle_x + (index * interval)) turtle_y
+        set color hue
+        set size turtle_size
+        set hidden? false
+      ]
+      set index (index + 1)
+    ]
+  ]
+  report turtle_shape_list
+end
+
+;; Displays the string at a given location in a specific color, erase non-hidden turtles created by this library in a
+;; specific area, and reports a list containing the list of turtle shapes making up the string (Turtle Context)
+;;
+;; Args:
+;;     string (string): string to display
+;;     turtle_x (float): x-cor to start rendering the string
+;;     turtle_y (float): y-cor to start rendering the string
+;;     start_x (float): x-cor to start erasing turtles
+;;     end_x (float): x-cor to stop erasing turtles
+;;     start_y (float): y-cor to start erasing turtles
+;;     end_y (float): y-cor to stop erasing turtles
+;;     turtle_size (float): size of each turtle making up the string
+;;     hue (float): color to display the string in
+;;     prev_item (list): list of turtle shapes making up the string, used to track if the area needs to be overwritten;
+;;                       pass [] on first use
+;;
+;; Reports:
+;;     (list): list of turtle shapes making up the string just displayed
+;;
+to-report trender-string [string turtle_x turtle_y start_x end_x start_y end_y turtle_size hue prev_item]
+  if (not (is-string? string))
+  [set string (word string)]
+  
+  let turtle_shape_list (get-turtle-shapes string)
+  let interval (turtle_size / 3)
+  let index 0
+  if prev_item != turtle_shape_list
+  [
+    ask displayturtles with [xcor > start_x and xcor < end_x and ycor > start_y and ycor < end_y]
+    [die]
+    
+    foreach turtle_shape_list
+    [
+      turtle_shape ->
+      hatch-displayturtles 1
+      [
+        set shape turtle_shape
+        setxy (turtle_x + (index * interval)) turtle_y
+        set color hue
+        set size turtle_size
+        set hidden? false
+      ]
+      set index (index + 1)
+    ]
+  ]
+  report turtle_shape_list
+end

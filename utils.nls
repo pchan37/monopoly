@@ -1,0 +1,52 @@
+globals [
+  debug_mode
+]
+
+;; Prints message only if debug_mode is true
+;;
+;; Args:
+;;     message (string): message to print if debug_mode is true
+;;
+to debug-print [message]
+  if debug_mode
+  [print message]
+end
+
+;; Checks if the patch is inside the given coordinates
+;;
+;; Args:
+;;     defining_coordinates (list): list of numbers that specifies a box
+;;
+;; Reports:
+;;     (boolean): whether the patch is inside the given coordinates (box)
+;;
+to-report patch-coordinates-inside? [defining_coordinates]
+  report pxcor > (item 3 defining_coordinates) and pxcor < (item 1 defining_coordinates) and
+         pycor > (item 2 defining_coordinates) and pycor < (item 0 defining_coordinates)
+end
+
+;; Checks if the mouse is inside the given coordinates
+;;
+;; Args:
+;;     defining_coordinates (list): list of numbers that specifies a box
+;;
+;; Reports:
+;;     (boolean): whether the mouse is inside the given coordinates (box)
+;;
+to-report mouse-coordinates-inside? [defining_coordinates]
+  report mouse-xcor > (item 3 defining_coordinates) and mouse-xcor < (item 1 defining_coordinates) and
+         mouse-ycor > (item 2 defining_coordinates) and mouse-ycor < (item 0 defining_coordinates)
+end
+
+;; Checks if the turtle is inside the given coordinates
+;;
+;; Args:
+;;     defining_coordinates (list): list of numbers that specifies a box
+;;
+;; Reports:
+;;     (boolean): whether the turtle is inside the given coordinates (box)
+;;
+to-report turtle-coordinates-inside? [defining_coordinates]
+  report xcor > (item 3 defining_coordinates) and xcor < (item 1 defining_coordinates) and
+         ycor > (item 2 defining_coordinates) and ycor < (item 0 defining_coordinates)
+end
